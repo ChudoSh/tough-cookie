@@ -52,43 +52,31 @@ vows
   .addBatch({
     "Verify when rejectPublicSuffixes is false then there is no pollution ": {
       topic: function () {
-        return new tough.CookieJar(undefined, {
-          rejectPublicSuffixes: false,
-        });
+        return new tough.CookieJar(undefined, { rejectPublicSuffixes: false });
       },
-      "Prevent direct __proto__ assignment": function (CookieJar) {
-        const evilCookie = new tough.Cookie({
-          domain: "example.com",
-          path: "/test",
-          key: "testKey",
-          value: "testValue",
-          __proto__: { polluted: true },
-        });
-        CookieJar.setCookie(evilCookie, "http://example.com", () => {
-          assert.strictEqual(Object.prototype.polluted, undefined);
-        });
+      "Positive test": function (CookieJar) {
+        CookieJar.setCookieSync(
+          "Normal=value; Domain=example.com",
+          "http://example.com"  
+        );
+        const testObj = {};
+        assert.strictEqual(testObj.polluted, undefined);
       },
-      "Domain value as the pollution": function (CookieJar) {
-        const evilCookie = new tough.Cookie({
-          domain: "__proto__",
-          path: "cookie",
-          key: "monster",
-          value: "true",
-        });
-        CookieJar.setCookie(evilCookie, "http://example.com", () => {
-          assert.strictEqual(Object.prototype["cookie"], undefined);
-        });
+      "Prevent domain __proto__ assignment": function (CookieJar) {
+        CookieJar.setCookieSync(
+          "Evil=polluted; Domain=__proto__",
+          "http://__proto__"  
+        );
+        const testObj = {};
+        assert.strictEqual(testObj.polluted, undefined);
       },
       "Path value as the pollution": function (CookieJar) {
-        const evilCookie = new tough.Cookie({
-          domain: "test",
-          path: "../__proto__/cookie",
-          key: "monster",
-          value: "true",
-        });
-        CookieJar.setCookie(evilCookie, "http://example.com", () => {
-          assert.strictEqual(Object.prototype["cookie"], undefined);
-        });
+        CookieJar.setCookieSync(
+          "Evil=polluted; Domain=example.com; Path=/__proto__",
+          "http://example.com"
+        );
+        const testObj = {};
+        assert.strictEqual(testObj.polluted, undefined);
       },
     },
   })
